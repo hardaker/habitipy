@@ -926,12 +926,17 @@ class HabitsChange(TasksChange):  # pylint: disable=missing-docstring,abstract-m
 
 
 @Habits.subcommand('add')  # pylint: disable=missing-docstring
-class HabitsAdd(ApplicationWithApi):
+class HabitsAdd(TagsHelper):
     DESCRIPTION = _("Add a habit <habit>")  # noqa: Q000
     priority = cli.SwitchAttr(
         ['-p', '--priority'],
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a habit"))  # noqa: Q000
+    tags = cli.SwitchAttr(
+        ['-t', '--tags'],
+        default="",
+        help=_("List of tags to apply")
+    )
     direction = cli.SwitchAttr(
         ['-d', '--direction'],
         cli.Set('positive', 'negative', 'both'), default='both',
@@ -943,13 +948,17 @@ class HabitsAdd(ApplicationWithApi):
             self.log.error(_("Empty habit text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(
+        response = self.api.tasks.user.post(
             type='habit', text=habit_str,
             priority=self.priority, up=(self.direction != 'negative'),
             down=(self.direction != 'positive'))
 
         res = _("Added habit '{}' with priority {} and direction {}").format(  # noqa: Q000
             habit_str, self.priority, self.direction)
+
+        # apply requested tags
+        self.apply_tags_to(response["id"], self.tags.split(","))
+
         print(prettify(res))
         Habits.invoke(config_filename=self.config_filename)
         return None
