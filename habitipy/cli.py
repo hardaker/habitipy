@@ -602,13 +602,13 @@ class Smash(CastOnTask):
 class Backstab(CastOnTask):
     DESCRIPTION=_("Cast Backstab on a task")
     def main(self, *args, **kwargs):
-        super().main('smash', *args, **kwargs)
+        super().main('backStab', *args, **kwargs)
 
 @Cast.subcommand('pickpocket')
 class PickPocket(CastOnTask):
     DESCRIPTION=_("Cast Pickpocket on a task")
     def main(self, *args, **kwargs):
-        super().main('smash', *args, **kwargs)
+        super().main('pickPocket', *args, **kwargs)
 
 @HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
 class Habits(TasksPrint):
