@@ -349,7 +349,7 @@ class TagsHelper(ApplicationWithApi):
         self.tags_by_name = {x['name']: x for x in self.tags_list}
 
     def get_or_create_tag_id_by_name(self, tag_name: str):
-        if not getattr(self, 'tags'):
+        if not getattr(self, 'tags_list', False):
             self.get_tags()
         if tag_name in self.tags_by_name:
             return self.tags_by_name[tag_name]['id']
@@ -377,20 +377,34 @@ class TasksPrint(TagsHelper):
         if self.nested_command:
             return
         super().main()
+        if self.tag:
+            self.get_tags()
         tasks = self.api.tasks.user.get(type=self.domain)
         tasks.extend(self.more_tasks)
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
         number_format = '{{:{}d}}. '.format(ident_size - 2)
         self.get_tags()
+
+        filter_by_tag = self.tag
+        if filter_by_tag:
+            filter_by_tag = self.get_or_create_tag_id_by_name(self.tag)
+
         for i, task in enumerate(tasks):
+            if filter_by_tag and filter_by_tag not in task['tags']:
+                continue
+
             i = number_format.format(i + 1) if self.config['show_numbers'] else ''
+
+            # create list of tags
             tag_list = ""
             if task['tags']:
                 tag_list = ", ".join([self.tags_by_id[x]["name"] for x in task['tags']])
-                tag_list = " (" + tag_list + ")"
+                tag_list = colors.dark_gray | " (" + tag_list + ")"
+
             res = i + prettify(self.domain_format(task)) + tag_list
             print(res)
+
 
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
@@ -751,6 +765,11 @@ class ValorousPresence(CastNoArguments):
 class Habits(TasksPrint):
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
     domain = 'habits'
+    tag = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("Tag name to limit the list by")
+    )
     def domain_format(self, habit):
         score = ScoreInfo(self.config['show_style'], habit['value'])
         return _("{0} {text}").format(score, **habit)  # noqa: Q000
@@ -760,6 +779,11 @@ class Habits(TasksPrint):
 class Dailys(TasksPrint):
     DESCRIPTION = _("List, check, uncheck daily tasks")  # noqa: Q000
     domain = 'dailys'
+    tag = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("Tag name to limit the list by")
+    )
     def domain_format(self, daily):
         score = ScoreInfo(self.config['show_style'], daily['value'])
         check = CHECK if daily['completed'] else UNCHECK
@@ -780,6 +804,11 @@ class Dailys(TasksPrint):
 class ToDos(TasksPrint):
     DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
+    tag = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("Tag name to limit the list by")
+    )
     def domain_format(self, todo):
         score = ScoreInfo(self.config['show_style'], todo['value'])
         check = CHECK if todo['completed'] else UNCHECK
