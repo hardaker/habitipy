@@ -359,9 +359,16 @@ class TasksPrint(ApplicationWithApi):
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
         number_format = '{{:{}d}}. '.format(ident_size - 2)
+        self.tags = self.api.tags.get()
+        self.tags_by_id = {x['id']: x for x in self.tags}
+        self.tags_by_name = {x['name']: x for x in self.tags}
         for i, task in enumerate(tasks):
             i = number_format.format(i + 1) if self.config['show_numbers'] else ''
-            res = i + prettify(self.domain_format(task))
+            tag_list = ""
+            if task['tags']:
+                tag_list = ", ".join([self.tags_by_id[x]["name"] for x in task['tags']])
+                tag_list = " (" + tag_list + ")"
+            res = i + prettify(self.domain_format(task)) + tag_list
             print(res)
 
 @HabiticaCli.subcommand('pets')
