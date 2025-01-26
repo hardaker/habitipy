@@ -548,6 +548,54 @@ class Food(ApplicationWithApi):
         for food in food_list_keys:
             print(f"{food:<30}: {food_list[food]}")
 
+
+@HabiticaCli.subcommand('cast')
+class Cast(ApplicationWithApi):
+    DESCRIPTION=_("Cast a spell")
+
+    cast_count = cli.SwitchAttr(
+        ['-C', '--cast-times'], argtype=int, default=1,
+        help=_("Number of times to cast the spell.")
+    )  # noqa: Q000
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_("Time to wait between each cast to avoid overloading the server"))  # noqa: Q000
+
+    def main(self):
+        super().main()
+
+class CastDamage(Cast):
+    def main(self, spell: str, *arguments):
+        super().main()
+        if len(arguments) != 2 or arguments[0] not in ["todos", "habits", "dailies"]:
+            self.log.error(_("usage: cast task (todos|habits|dailies) number"))
+            return
+
+        (domain, number) = arguments
+        number = int(number)
+        tasks = self.api.tasks.user.get(type=domain)
+
+        if (number > len(tasks)):
+            self.log.error(_("selection number is too high"))
+            return
+
+        for _i in range(self.cast_count):
+            print(_(f"casting {spell}..."))
+            response = self.api.user["class"].cast[spell].post(uri_params = {
+                'targetId': tasks[number-1]['id'],
+            })
+            time.sleep(self.sleep_time)
+        
+@Cast.subcommand('fireball')
+class FireBall(CastDamage):
+    def main(self, *args, **kwargs):
+        super().main('fireball', *args, **kwargs)
+
+@Cast.subcommand('smash')
+class FireBall(CastDamage):
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
 @HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
 class Habits(TasksPrint):
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
