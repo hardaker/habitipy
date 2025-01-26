@@ -564,6 +564,17 @@ class Cast(ApplicationWithApi):
     def main(self):
         super().main()
 
+
+class CastNoArguments(Cast):
+    def main(self, spell: str):
+        super().main()
+
+        for _i in range(self.cast_count):
+            print(_(f"casting {spell}..."))
+            _response = self.api.user["class"].cast[spell].post()
+            time.sleep(self.sleep_time)
+        
+
 class CastOnTask(Cast):
     def main(self, spell: str, *arguments):
         super().main()
@@ -581,34 +592,132 @@ class CastOnTask(Cast):
 
         for _i in range(self.cast_count):
             print(_(f"casting {spell}..."))
-            response = self.api.user["class"].cast[spell].post(uri_params = {
+            _response = self.api.user["class"].cast[spell].post(uri_params = {
                 'targetId': tasks[number-1]['id'],
             })
             time.sleep(self.sleep_time)
         
+
+# Healer spells
+
+@Cast.subcommand('heal')
+class Heal(CastNoArguments):
+    DESCRIPTION=_("Cast Healer's Healing Light")
+    def main(self, *args, **kwargs):
+        super().main('heal', *args, **kwargs)
+
+
+@Cast.subcommand('brightness')
+class Brightness(CastNoArguments):
+    DESCRIPTION=_("Cast Healer's Searing Brightness")
+    def main(self, *args, **kwargs):
+        super().main('brightness', *args, **kwargs)
+
+
+@Cast.subcommand('protectAura')
+class ProtectAura(CastNoArguments):
+    DESCRIPTION=_("Cast Healer's Protective Aura")
+    def main(self, *args, **kwargs):
+        super().main('protectAura', *args, **kwargs)
+
+
+@Cast.subcommand('healAll')
+class HealAll(CastNoArguments):
+    DESCRIPTION=_("Cast Healer's Blessing")
+    def main(self, *args, **kwargs):
+        super().main('healAll', *args, **kwargs)
+
+
+# Mage Spells
+
 @Cast.subcommand('fireball')
 class FireBall(CastOnTask):
-    DESCRIPTION=_("Cast Burst of Flames on a task")
+    DESCRIPTION=_("Cast Mage's Burst of Flames on a task")
     def main(self, *args, **kwargs):
         super().main('fireball', *args, **kwargs)
 
-@Cast.subcommand('smash')
-class Smash(CastOnTask):
-    DESCRIPTION=_("Cast Brutal Smash on a task")
+
+@Cast.subcommand('ethereal') # deliberately different
+class Ethereal(CastNoArguments):
+    DESCRIPTION=_("Cast Mage's Ethereal Surge")
     def main(self, *args, **kwargs):
-        super().main('smash', *args, **kwargs)
+        super().main('mpheal', *args, **kwargs)
+
+
+@Cast.subcommand('earth')
+class Earth(CastNoArguments):
+    DESCRIPTION=_("Cast Mage's Earthquake")
+    def main(self, *args, **kwargs):
+        super().main('earth', *args, **kwargs)
+
+
+@Cast.subcommand('frost')
+class Frost(CastNoArguments):
+    DESCRIPTION=_("Cast Mage's Chilling Frost")
+    def main(self, *args, **kwargs):
+        super().main('frost', *args, **kwargs)
+
+
+# Rogue spells
 
 @Cast.subcommand('backstab')
 class Backstab(CastOnTask):
-    DESCRIPTION=_("Cast Backstab on a task")
+    DESCRIPTION=_("Cast Thief's Backstab on a task")
     def main(self, *args, **kwargs):
         super().main('backStab', *args, **kwargs)
 
+
 @Cast.subcommand('pickpocket')
 class PickPocket(CastOnTask):
-    DESCRIPTION=_("Cast Pickpocket on a task")
+    DESCRIPTION=_("Cast Thief's Pickpocket on a task")
     def main(self, *args, **kwargs):
         super().main('pickPocket', *args, **kwargs)
+
+
+@Cast.subcommand('tools')  # deliberately different
+class ToolsOfTrade(CastNoArguments):
+    DESCRIPTION=_("Cast Thief's Tools of the Trade")
+    def main(self, *args, **kwargs):
+        super().main('toolsOfTrade', *args, **kwargs)
+
+
+@Cast.subcommand('stealth')
+class Stealth(CastNoArguments):
+    DESCRIPTION=_("Cast Thief's Stealth")
+    def main(self, *args, **kwargs):
+        super().main('stealth', *args, **kwargs)
+
+
+# Warrior spells
+
+
+@Cast.subcommand('smash')
+class Smash(CastOnTask):
+    DESCRIPTION=_("Cast Warrior's Brutal Smash on a task")
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
+
+@Cast.subcommand('defense')  # deliberately different
+class DefensiveStance(CastNoArguments):
+    DESCRIPTION=_("Cast Warrior's Defensive Stance")
+    def main(self, *args, **kwargs):
+        super().main('defensiveStance', *args, **kwargs)
+
+
+@Cast.subcommand('intimidate')
+class Intimidate(CastNoArguments):
+    DESCRIPTION=_("Cast Warrior's Intimidating Gaze")
+    def main(self, *args, **kwargs):
+        super().main('intimidate', *args, **kwargs)
+
+
+@Cast.subcommand('presence')
+class ValorousPresence(CastNoArguments):
+    DESCRIPTION=_("Cast Warrior's Valorous Presence")
+    def main(self, *args, **kwargs):
+        super().main('valorousPresence', *args, **kwargs)
+
 
 @HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
 class Habits(TasksPrint):
