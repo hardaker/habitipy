@@ -564,7 +564,7 @@ class Cast(ApplicationWithApi):
     def main(self):
         super().main()
 
-class CastDamage(Cast):
+class CastOnTask(Cast):
     def main(self, spell: str, *arguments):
         super().main()
         if len(arguments) != 2 or arguments[0] not in ["todos", "habits", "dailies"]:
@@ -587,12 +587,26 @@ class CastDamage(Cast):
             time.sleep(self.sleep_time)
         
 @Cast.subcommand('fireball')
-class FireBall(CastDamage):
+class FireBall(CastOnTask):
+    DESCRIPTION=_("Cast Burst of Flames on a task")
     def main(self, *args, **kwargs):
         super().main('fireball', *args, **kwargs)
 
 @Cast.subcommand('smash')
-class FireBall(CastDamage):
+class Smash(CastOnTask):
+    DESCRIPTION=_("Cast Brutal Smash on a task")
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
+@Cast.subcommand('backstab')
+class Backstab(CastOnTask):
+    DESCRIPTION=_("Cast Backstab on a task")
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
+@Cast.subcommand('pickpocket')
+class PickPocket(CastOnTask):
+    DESCRIPTION=_("Cast Pickpocket on a task")
     def main(self, *args, **kwargs):
         super().main('smash', *args, **kwargs)
 
