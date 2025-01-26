@@ -342,7 +342,30 @@ class ScoreInfo:
         return colors.fg(cls.colors_[index])
 
 
-class TasksPrint(ApplicationWithApi):
+class TagsHelper(ApplicationWithApi):
+    def get_tags(self):
+        self.tags_list = self.api.tags.get()
+        self.tags_by_id = {x['id']: x for x in self.tags_list}
+        self.tags_by_name = {x['name']: x for x in self.tags_list}
+
+    def get_or_create_tag_id_by_name(self, tag_name: str):
+        if not getattr(self, 'tags'):
+            self.get_tags()
+        if tag_name in self.tags_by_name:
+            return self.tags_by_name[tag_name]['id']
+        
+        new_tag = self.api.tags.post(name=tag_name)
+        return new_tag['id']
+
+    def apply_tags_to(self, apply_to: str, tag_names_list: list[str]):
+        # apply requested tags
+        self.get_tags()
+        for tag in tag_names_list:
+            tag_id = self.get_or_create_tag_id_by_name(tag)
+            self.api.tasks[apply_to]['tags'][tag_id].post()
+        
+
+class TasksPrint(TagsHelper):
     """Put all tasks from `domain` to print"""
     domain = ''  # type: str
     more_tasks = []  # type: List[Dict[str, Any]]
@@ -359,9 +382,7 @@ class TasksPrint(ApplicationWithApi):
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
         number_format = '{{:{}d}}. '.format(ident_size - 2)
-        self.tags = self.api.tags.get()
-        self.tags_by_id = {x['id']: x for x in self.tags}
-        self.tags_by_name = {x['name']: x for x in self.tags}
+        self.get_tags()
         for i, task in enumerate(tasks):
             i = number_format.format(i + 1) if self.config['show_numbers'] else ''
             tag_list = ""
@@ -1024,12 +1045,17 @@ class TodosDelete(TodosChange):
 
 
 @ToDos.subcommand('add')  # pylint: disable=missing-docstring
-class TodosAdd(ApplicationWithApi):
+class TodosAdd(TagsHelper):
     DESCRIPTION = _("Add a todo <todo>")  # noqa: Q000
     priority = cli.SwitchAttr(
         ['-p', '--priority'],
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a todo"))  # noqa: Q000
+    tags = cli.SwitchAttr(
+        ['-t', '--tags'],
+        default="",
+        help=_("List of tags to apply")
+    )
 
     def main(self, *todo: str):
         todo_str = ' '.join(todo)
@@ -1037,8 +1063,12 @@ class TodosAdd(ApplicationWithApi):
             self.log.error(_("Empty todo text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        response = self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
+
+        # apply requested tags
+        self.apply_tags_to(response["id"], self.tags.split(","))
+
         print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
         return 0
