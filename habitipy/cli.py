@@ -935,7 +935,7 @@ class HabitsAdd(TagsHelper):
     tags = cli.SwitchAttr(
         ['-t', '--tags'],
         default="",
-        help=_("List of tags to apply")
+        help=_("Comma separated list of tags to apply")
     )
     direction = cli.SwitchAttr(
         ['-d', '--direction'],
@@ -1063,7 +1063,7 @@ class TodosAdd(TagsHelper):
     tags = cli.SwitchAttr(
         ['-t', '--tags'],
         default="",
-        help=_("List of tags to apply")
+        help=_("Comma separated list of tags to apply")
     )
 
     def main(self, *todo: str):
